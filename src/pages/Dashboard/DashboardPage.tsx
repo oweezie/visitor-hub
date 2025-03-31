@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
-import { DashboardStats } from "@/types";
+import { DashboardStats, RecentActivity } from "@/types";
 
 // Import our new components
 import DashboardHeader from "./components/DashboardHeader";
@@ -30,13 +30,15 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      // Since our axios interceptor directly returns response.data, we don't need to access .data anymore
+      // Our axios interceptor returns the data directly, not the AxiosResponse
       const dashboardData = await api.get<DashboardStats>("/stats/dashboard/");
       
       // Check if we need to fetch activity data separately
       if (!dashboardData.recentActivity || dashboardData.recentActivity.length === 0) {
         try {
-          const activityData = await api.get("/stats/recent-activity/");
+          // Get activity data in a separate call
+          const activityData = await api.get<RecentActivity[]>("/stats/recent-activity/");
+          
           // Create a new object with all properties from dashboardData plus the activity data
           setStats({
             ...dashboardData,
