@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/axios";
@@ -12,21 +11,15 @@ import {
 } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Premise } from "@/types/Premise";
 
-interface Premise {
-  id: number;
+interface PremiseFormData {
   name: string;
   address: string;
   capacity?: number;
   contact_person?: string;
   contact_email?: string;
   contact_phone?: string;
-  current_visitors?: number;
-  qr_code?: string;
-  qr_code_image?: string;
-  qr_code_url?: string;
-  created_at: string;
-  updated_at: string;
 }
 
 const PremisesPage = () => {
@@ -38,7 +31,7 @@ const PremisesPage = () => {
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [showQRCodeDialog, setShowQRCodeDialog] = useState(false);
   const [selectedPremise, setSelectedPremise] = useState<Premise | null>(null);
-  const [formData, setFormData] = useState<Partial<Premise>>({
+  const [formData, setFormData] = useState<PremiseFormData>({
     name: "",
     address: "",
     capacity: 50,
@@ -63,7 +56,7 @@ const PremisesPage = () => {
           try {
             // Get current visitors for this premise
             const visitorsResponse = await api.get(`/visitors/?premise=${premise.id}&status=signed_in`);
-            const currentVisitors = visitorsResponse.data.length || 0;
+            const currentVisitors = visitorsResponse.data?.length || 0;
             
             return {
               ...premise,
@@ -71,10 +64,6 @@ const PremisesPage = () => {
             };
           } catch (error) {
             console.error(`Error fetching visitors for premise ${premise.id}:`, error);
-            // Check for authentication errors
-            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-              console.error('Authentication error: User may not be authorized to access visitor data');
-            }
             return {
               ...premise,
               current_visitors: 0
@@ -651,7 +640,6 @@ const PremisesPage = () => {
                   if (selectedPremise) {
                     try {
                       const response = await premisesApi.downloadPremiseQrCode(selectedPremise.id);
-                      // The response is already a Blob from the API service
                       const blob = response;
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
@@ -663,7 +651,6 @@ const PremisesPage = () => {
                       window.URL.revokeObjectURL(url);
                     } catch (error) {
                       console.error('Error downloading QR code:', error);
-                      // Check for authentication errors
                       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
                         console.error('Authentication error: User may not be authorized to download QR code');
                       }
@@ -687,7 +674,6 @@ const PremisesPage = () => {
                     try {
                       const qrCodeData = await premisesApi.getPremiseQrCode(selectedPremise.id);
                       
-                      // Update the premise with the new QR code URL
                       const updatedPremises = premises.map(p => 
                         p.id === selectedPremise.id 
                           ? { ...p, qr_code_url: qrCodeData.qr_code_url }
@@ -703,7 +689,6 @@ const PremisesPage = () => {
                       });
                     } catch (error) {
                       console.error("Error regenerating QR code:", error);
-                      // Check for authentication errors
                       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
                         console.error('Authentication error: User may not be authorized to regenerate QR code');
                       }

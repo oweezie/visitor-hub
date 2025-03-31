@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,17 +80,21 @@ const DashboardPage = () => {
     try {
       const response = await api.get<DashboardStats>("/stats/dashboard/");
       
+      // api.get returns the data part of the response due to our axios interceptor
+      // Make a copy of the response data for modification if needed
+      const statsData = { ...response };
+      
       // Check if recentActivity is present; if not, attempt to fetch it separately
-      if (!response.recentActivity) {
+      if (!statsData.recentActivity || statsData.recentActivity.length === 0) {
         try {
           const activityResponse = await api.get<RecentActivity[]>("/stats/recent-activity/");
-          response.recentActivity = activityResponse;
+          statsData.recentActivity = activityResponse;
         } catch (activityError) {
           console.error("Error fetching recent activity:", activityError);
         }
       }
       
-      setStats(response as DashboardStats);
+      setStats(statsData);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       // Optionally show a toast error here

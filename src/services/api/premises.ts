@@ -32,25 +32,25 @@ export const premisesApi = {
   // Get all premises
   getAllPremises: async (): Promise<Premise[]> => {
     const response = await api.get<PremiseApiResponse[]>('/auth/premises/');
-    return response.map(mapApiResponseToPremise);
+    return (response as PremiseApiResponse[]).map(mapApiResponseToPremise);
   },
   
   // Get premise by ID
   getPremiseById: async (id: string | number): Promise<Premise> => {
     const response = await api.get<PremiseApiResponse>(`/auth/premises/${id}/`);
-    return mapApiResponseToPremise(response);
+    return mapApiResponseToPremise(response as PremiseApiResponse);
   },
   
   // Create a new premise
   createPremise: async (data: CreatePremiseData): Promise<Premise> => {
     const response = await api.post<PremiseApiResponse>('/auth/premises/', data);
-    return mapApiResponseToPremise(response);
+    return mapApiResponseToPremise(response as PremiseApiResponse);
   },
   
   // Update a premise
   updatePremise: async (id: string | number, data: Partial<CreatePremiseData>): Promise<Premise> => {
     const response = await api.put<PremiseApiResponse>(`/auth/premises/${id}/`, data);
-    return mapApiResponseToPremise(response);
+    return mapApiResponseToPremise(response as PremiseApiResponse);
   },
   
   // Delete a premise

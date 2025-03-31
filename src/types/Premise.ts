@@ -11,4 +11,7 @@ export interface Premise {
   address: string;
   qr_code?: string;
   qr_code_url?: string;
+  current_visitors?: number;
+  created_at?: string;
+  updated_at?: string;
 }
