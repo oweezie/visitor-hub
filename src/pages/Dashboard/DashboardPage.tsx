@@ -30,7 +30,7 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      // Our axios interceptor returns the data directly, not the AxiosResponse
+      // Get dashboard data
       const dashboardData = await api.get<DashboardStats>("/stats/dashboard/");
       
       // Check if we need to fetch activity data separately
