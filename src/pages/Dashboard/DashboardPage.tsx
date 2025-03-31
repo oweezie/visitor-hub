@@ -30,23 +30,24 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const response = await api.get<DashboardStats>("/stats/dashboard/");
+      // Since our axios interceptor directly returns response.data, we don't need to access .data anymore
+      const dashboardData = await api.get<DashboardStats>("/stats/dashboard/");
       
-      // Since our axios interceptor directly returns response.data, the type is correct now
-      if (!response.recentActivity || response.recentActivity.length === 0) {
+      // Check if we need to fetch activity data separately
+      if (!dashboardData.recentActivity || dashboardData.recentActivity.length === 0) {
         try {
-          const activityResponse = await api.get("/stats/recent-activity/");
-          // Create a new object with all properties from the response plus the activity data
+          const activityData = await api.get("/stats/recent-activity/");
+          // Create a new object with all properties from dashboardData plus the activity data
           setStats({
-            ...response,
-            recentActivity: activityResponse
+            ...dashboardData,
+            recentActivity: activityData
           });
         } catch (activityError) {
           console.error("Error fetching recent activity:", activityError);
-          setStats(response);
+          setStats(dashboardData);
         }
       } else {
-        setStats(response);
+        setStats(dashboardData);
       }
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
