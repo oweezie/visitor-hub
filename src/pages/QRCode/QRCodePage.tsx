@@ -6,17 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Printer, QrCode, Share2, RefreshCw } from "lucide-react";
-import api from "@/lib/axios";
-import { useAuth } from "@/contexts/AuthContext";
 import { premisesApi } from "@/services/api/premises";
-
-interface Premise {
-  id: string;
-  name: string;
-  address: string;
-  qr_code: string;
-  qr_code_url?: string;
-}
+import { Premise } from "@/types/Premise";
 
 const QRCodePage = () => {
   const [premises, setPremises] = useState<Premise[]>([]);
@@ -25,7 +16,6 @@ const QRCodePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isQrLoading, setIsQrLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   // Fetch premises on component mount
   useEffect(() => {
@@ -33,6 +23,7 @@ const QRCodePage = () => {
       try {
         setIsLoading(true);
         const response = await premisesApi.getAllPremises();
+        console.log("Premises fetched:", response);
         setPremises(response);
         
         // Auto-select first premise if available
@@ -61,9 +52,24 @@ const QRCodePage = () => {
     const fetchQrCode = async () => {
       try {
         setIsQrLoading(true);
+        console.log("Fetching QR code for premise:", selectedPremise);
         const response = await premisesApi.getPremiseQrCode(selectedPremise);
-        const url = `${response.qr_code_url}${response.qr_code_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
-        setQrCodeUrl(url);
+        console.log("QR code response:", response);
+        
+        // Ensure we're using the correct property from the response
+        if (response && response.qr_code_url) {
+          // Add cache-busting parameter to force reload of the image
+          const url = `${response.qr_code_url}${response.qr_code_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+          console.log("Setting QR code URL to:", url);
+          setQrCodeUrl(url);
+        } else {
+          console.error("QR code URL not found in response", response);
+          toast({
+            title: "Error",
+            description: "The QR code URL is missing from the server response.",
+            variant: "destructive"
+          });
+        }
       } catch (error) {
         console.error("Error fetching QR code:", error);
         toast({
@@ -327,7 +333,13 @@ const QRCodePage = () => {
                     src={qrCodeUrl} 
                     alt="Visitor Sign-In QR Code" 
                     className="h-64 w-64 object-contain"
+                    onError={(e) => {
+                      console.error("Error loading QR code image:", e);
+                      e.currentTarget.classList.add("border", "border-red-500");
+                      e.currentTarget.nextSibling && (e.currentTarget.nextSibling as HTMLElement).classList.remove("hidden");
+                    }}
                   />
+                  <p className="text-red-500 text-xs mt-2 hidden">Error loading QR code image. Please try refreshing.</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 w-64 border rounded-md bg-gray-50">
