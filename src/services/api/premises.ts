@@ -1,7 +1,9 @@
 
 import api from "@/lib/axios";
+import { Premise } from "@/types/Premise";
 
-interface Premise {
+// API response type that matches backend structure
+interface PremiseApiResponse {
   id: number;
   name: string;
   address: string;
@@ -17,25 +19,38 @@ interface CreatePremiseData {
   address: string;
 }
 
+// Helper function to convert API response to our Premise type
+const mapApiResponseToPremise = (response: PremiseApiResponse): Premise => ({
+  id: String(response.id), // Convert number to string to match our Premise type
+  name: response.name,
+  address: response.address,
+  qr_code: response.qr_code,
+  qr_code_url: response.qr_code_url
+});
+
 export const premisesApi = {
   // Get all premises
-  getAllPremises: (): Promise<Premise[]> => {
-    return api.get('/auth/premises/');
+  getAllPremises: async (): Promise<Premise[]> => {
+    const response = await api.get<PremiseApiResponse[]>('/auth/premises/');
+    return response.map(mapApiResponseToPremise);
   },
   
   // Get premise by ID
-  getPremiseById: (id: string | number): Promise<Premise> => {
-    return api.get(`/auth/premises/${id}/`);
+  getPremiseById: async (id: string | number): Promise<Premise> => {
+    const response = await api.get<PremiseApiResponse>(`/auth/premises/${id}/`);
+    return mapApiResponseToPremise(response);
   },
   
   // Create a new premise
-  createPremise: (data: CreatePremiseData): Promise<Premise> => {
-    return api.post('/auth/premises/', data);
+  createPremise: async (data: CreatePremiseData): Promise<Premise> => {
+    const response = await api.post<PremiseApiResponse>('/auth/premises/', data);
+    return mapApiResponseToPremise(response);
   },
   
   // Update a premise
-  updatePremise: (id: string | number, data: Partial<CreatePremiseData>): Promise<Premise> => {
-    return api.put(`/auth/premises/${id}/`, data);
+  updatePremise: async (id: string | number, data: Partial<CreatePremiseData>): Promise<Premise> => {
+    const response = await api.put<PremiseApiResponse>(`/auth/premises/${id}/`, data);
+    return mapApiResponseToPremise(response);
   },
   
   // Delete a premise
@@ -44,12 +59,11 @@ export const premisesApi = {
   },
   
   // Get QR code URL for a premise
-  getPremiseQrCode: (id: string | number): Promise<{ qr_code_url: string }> => {
+  getPremiseQrCode: async (id: string | number): Promise<{ qr_code_url: string }> => {
     return api.get(`/auth/premises/${id}/qr_code/`);
   },
   
   // Download QR code image as Blob
-  // Authentication is handled by the axios instance which includes auth headers
   downloadPremiseQrCode: (id: string | number): Promise<Blob> => {
     return api.get(`/auth/premises/${id}/download_qr_code/`, { 
       responseType: 'blob',

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,32 +29,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-
-// Dashboard Stats Type
-interface DashboardStats {
-  totalVisitors: number;
-  activeVisitors: number;
-  averageDuration: string;
-  recentSignIns: number;
-  recentSignOuts: number;
-  signInsByPremise: { name: string; value: number }[];
-  visitorHistory: { date: string; visitors: number }[];
-  visitorStatuses: { name: string; value: number }[];
-  recentActivity?: RecentActivity[];
-}
-
-// Recent Activity Type
-interface RecentActivity {
-  id: number;
-  visitorName: string;
-  activityType: 'sign_in' | 'sign_out';
-  timestamp: string;
-  premise?: string;
-  duration?: string;
-  notes?: string;
-}
-
-// Colors for the pie chart
+import { DashboardStats, RecentActivity } from "@/types";
 
 // Colors for the pie chart
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -103,19 +77,19 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/stats/dashboard/");
+      const response = await api.get<DashboardStats>("/stats/dashboard/");
       
       // Check if recentActivity is present; if not, attempt to fetch it separately
       if (!response.recentActivity) {
         try {
-          const activityResponse = await api.get("/stats/recent-activity/");
+          const activityResponse = await api.get<RecentActivity[]>("/stats/recent-activity/");
           response.recentActivity = activityResponse;
         } catch (activityError) {
           console.error("Error fetching recent activity:", activityError);
         }
       }
       
-      setStats(response);
+      setStats(response as DashboardStats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       // Optionally show a toast error here

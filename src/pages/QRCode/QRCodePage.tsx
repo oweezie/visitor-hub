@@ -28,7 +28,7 @@ const QRCodePage = () => {
         
         // Auto-select first premise if available
         if (response.length > 0) {
-          setSelectedPremise(String(response[0].id));
+          setSelectedPremise(response[0].id);
         }
       } catch (error) {
         console.error("Error fetching premises:", error);
