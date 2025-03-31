@@ -1,4 +1,3 @@
-
 import api from "@/lib/axios";
 import { Premise } from "@/types/Premise";
 
@@ -41,8 +40,30 @@ const mapApiResponseToPremise = (response: PremiseApiResponse): Premise => ({
 export const premisesApi = {
   // Get all premises
   getAllPremises: async (): Promise<Premise[]> => {
-    const response = await api.get<PremiseApiResponse[]>('/auth/premises/');
-    return response.data.map(mapApiResponseToPremise);
+    try {
+      // The axios interceptor already returns response.data
+      const response = await api.get<PremiseApiResponse[]>('/auth/premises/');
+      
+      // Add console log to debug the response
+      console.log('Premises API response:', response);
+      
+      // Check if response is an array before mapping
+      if (Array.isArray(response)) {
+        return response.map(mapApiResponseToPremise);
+      }
+      
+      // If not an array but has a data property (fallback)
+      if (response && Array.isArray(response.data)) {
+        return response.data.map(mapApiResponseToPremise);
+      }
+      
+      // Return empty array as fallback
+      console.error('Unexpected response format:', response);
+      return [];
+    } catch (error) {
+      console.error('Error in getAllPremises:', error);
+      return [];
+    }
   },
   
   // Get premise by ID
