@@ -1,17 +1,19 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "@/lib/axios";
 import { premisesApi } from "@/services/api/premises";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Building, Edit, Trash2, Plus, QrCode, Users, MapPin, Mail, Phone, User
-} from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
 import { Premise } from "@/types/Premise";
+
+// Import components
+import PremiseCard from "./components/PremiseCard";
+import EmptyState from "./components/EmptyState";
+import AddPremiseDialog from "./components/AddPremiseDialog";
+import EditPremiseDialog from "./components/EditPremiseDialog";
+import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
+import QRCodeDialog from "./components/QRCodeDialog";
 
 interface PremiseFormData {
   name: string;
@@ -41,7 +43,6 @@ const PremisesPage = () => {
   });
   
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   const fetchPremises = async () => {
     try {
@@ -309,409 +310,53 @@ const PremisesPage = () => {
       </div>
       
       {premises.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center h-64">
-            <Building className="h-16 w-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium mb-2">No Premises Found</h3>
-            <p className="text-muted-foreground text-center mb-6">
-              You don't have any premises yet. Add your first premise to get started.
-            </p>
-            <Button onClick={() => setShowAddPremiseDialog(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Premise
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState onAddClick={() => setShowAddPremiseDialog(true)} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {premises.map((premise) => (
-            <Card key={premise.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{premise.name}</CardTitle>
-                    <CardDescription className="flex items-center mt-1">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {premise.address}
-                    </CardDescription>
-                  </div>
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <Building className="h-5 w-5 text-primary" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center">
-                    <Users className="h-3 w-3 mr-1 text-gray-500" />
-                    <span>Capacity: {premise.capacity}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="h-3 w-3 mr-1 text-gray-500" />
-                    <span>Current: {premise.current_visitors}</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  {premise.contact_person && (
-                    <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1 text-gray-500" />
-                      <span>Contact: {premise.contact_person}</span>
-                    </div>
-                  )}
-                  {premise.contact_email && (
-                    <div className="flex items-center">
-                      <Mail className="h-3 w-3 mr-1 text-gray-500" />
-                      <span>{premise.contact_email}</span>
-                    </div>
-                  )}
-                  {premise.contact_phone && (
-                    <div className="flex items-center">
-                      <Phone className="h-3 w-3 mr-1 text-gray-500" />
-                      <span>{premise.contact_phone}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="border-t pt-4 flex justify-between">
-                <div className="flex space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleEditClick(premise)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
-                    onClick={() => handleDeleteClick(premise)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => handleQRCodeClick(premise)}
-                >
-                  <QrCode className="h-4 w-4 mr-1" />
-                  QR Code
-                </Button>
-              </CardFooter>
-            </Card>
+            <PremiseCard
+              key={premise.id}
+              premise={premise}
+              onEditClick={handleEditClick}
+              onDeleteClick={handleDeleteClick}
+              onQRCodeClick={handleQRCodeClick}
+            />
           ))}
         </div>
       )}
       
-      {/* Add Premise Dialog */}
-      <Dialog open={showAddPremiseDialog} onOpenChange={setShowAddPremiseDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Premise</DialogTitle>
-            <DialogDescription>
-              Fill in the details to add a new premise
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Premise Name <span className="text-red-500">*</span></Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name || ""}
-                onChange={handleInputChange}
-                placeholder="Headquarters Building"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="address">Address <span className="text-red-500">*</span></Label>
-              <Input
-                id="address"
-                name="address"
-                value={formData.address || ""}
-                onChange={handleInputChange}
-                placeholder="123 Main Street, City, Country"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Maximum Capacity</Label>
-              <Input
-                id="capacity"
-                name="capacity"
-                type="number"
-                value={formData.capacity || 50}
-                onChange={handleInputChange}
-                min={1}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contact_person">Contact Person</Label>
-              <Input
-                id="contact_person"
-                name="contact_person"
-                value={formData.contact_person || ""}
-                onChange={handleInputChange}
-                placeholder="John Doe"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contact_email">Contact Email</Label>
-              <Input
-                id="contact_email"
-                name="contact_email"
-                type="email"
-                value={formData.contact_email || ""}
-                onChange={handleInputChange}
-                placeholder="john.doe@example.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contact_phone">Contact Phone</Label>
-              <Input
-                id="contact_phone"
-                name="contact_phone"
-                value={formData.contact_phone || ""}
-                onChange={handleInputChange}
-                placeholder="+1234567890"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddPremiseDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddPremise}>
-              Add Premise
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <AddPremiseDialog
+        open={showAddPremiseDialog}
+        onOpenChange={setShowAddPremiseDialog}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSubmit={handleAddPremise}
+      />
       
-      {/* Edit Premise Dialog */}
-      <Dialog open={showEditPremiseDialog} onOpenChange={setShowEditPremiseDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Premise</DialogTitle>
-            <DialogDescription>
-              Update the details for {selectedPremise?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Premise Name <span className="text-red-500">*</span></Label>
-              <Input
-                id="edit-name"
-                name="name"
-                value={formData.name || ""}
-                onChange={handleInputChange}
-                placeholder="Headquarters Building"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-address">Address <span className="text-red-500">*</span></Label>
-              <Input
-                id="edit-address"
-                name="address"
-                value={formData.address || ""}
-                onChange={handleInputChange}
-                placeholder="123 Main Street, City, Country"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-capacity">Maximum Capacity</Label>
-              <Input
-                id="edit-capacity"
-                name="capacity"
-                type="number"
-                value={formData.capacity || 50}
-                onChange={handleInputChange}
-                min={1}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-contact_person">Contact Person</Label>
-              <Input
-                id="edit-contact_person"
-                name="contact_person"
-                value={formData.contact_person || ""}
-                onChange={handleInputChange}
-                placeholder="John Doe"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-contact_email">Contact Email</Label>
-              <Input
-                id="edit-contact_email"
-                name="contact_email"
-                type="email"
-                value={formData.contact_email || ""}
-                onChange={handleInputChange}
-                placeholder="john.doe@example.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-contact_phone">Contact Phone</Label>
-              <Input
-                id="edit-contact_phone"
-                name="contact_phone"
-                value={formData.contact_phone || ""}
-                onChange={handleInputChange}
-                placeholder="+1234567890"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditPremiseDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdatePremise}>
-              Update Premise
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditPremiseDialog
+        open={showEditPremiseDialog}
+        onOpenChange={setShowEditPremiseDialog}
+        premise={selectedPremise}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSubmit={handleUpdatePremise}
+      />
       
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {selectedPremise?.name}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirmDialog(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeletePremise}
-            >
-              Delete Premise
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={showDeleteConfirmDialog}
+        onOpenChange={setShowDeleteConfirmDialog}
+        premise={selectedPremise}
+        onConfirm={handleDeletePremise}
+      />
       
-      {/* QR Code Dialog */}
-      <Dialog open={showQRCodeDialog} onOpenChange={setShowQRCodeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>QR Code for {selectedPremise?.name}</DialogTitle>
-            <DialogDescription>
-              Visitors can scan this QR code to sign in or sign out
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center py-6">
-            {selectedPremise?.qr_code_url ? (
-              <div className="bg-white p-6 rounded-md mb-4 border">
-                <img 
-                  src={selectedPremise.qr_code_url} 
-                  alt={`QR Code for ${selectedPremise.name}`}
-                  className="w-48 h-48 object-contain"
-                />
-              </div>
-            ) : (
-              <div className="bg-gray-100 p-6 rounded-md mb-4 flex items-center justify-center w-48 h-48">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            )}
-            <p className="text-center text-sm text-muted-foreground mb-4">
-              This QR code contains a unique link for {selectedPremise?.name}
-            </p>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline"
-                onClick={async () => {
-                  if (selectedPremise) {
-                    try {
-                      const response = await premisesApi.downloadPremiseQrCode(selectedPremise.id);
-                      const blob = response;
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `premise_qr_${selectedPremise.id}.png`;
-                      document.body.appendChild(a);
-                      a.click();
-                      a.remove();
-                      window.URL.revokeObjectURL(url);
-                    } catch (error) {
-                      console.error('Error downloading QR code:', error);
-                      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                        console.error('Authentication error: User may not be authorized to download QR code');
-                      }
-                      toast({
-                        title: 'Error',
-                        description: 'Failed to download QR code',
-                        variant: 'destructive'
-                      });
-                    }
-                  }
-                }}
-                disabled={!selectedPremise?.qr_code_url}
-              >
-                <QrCode className="mr-2 h-4 w-4" />
-                Download QR Code
-              </Button>
-              <Button 
-                variant="secondary"
-                onClick={async () => {
-                  if (selectedPremise) {
-                    try {
-                      const qrCodeData = await premisesApi.getPremiseQrCode(selectedPremise.id);
-                      
-                      const updatedPremises = premises.map(p => 
-                        p.id === selectedPremise.id 
-                          ? { ...p, qr_code_url: qrCodeData.qr_code_url }
-                          : p
-                      );
-                      
-                      setPremises(updatedPremises);
-                      setSelectedPremise({ ...selectedPremise, qr_code_url: qrCodeData.qr_code_url });
-                      
-                      toast({
-                        title: "Success",
-                        description: "QR code regenerated successfully"
-                      });
-                    } catch (error) {
-                      console.error("Error regenerating QR code:", error);
-                      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                        console.error('Authentication error: User may not be authorized to regenerate QR code');
-                      }
-                      toast({
-                        title: "Error",
-                        description: "Failed to regenerate QR code",
-                        variant: "destructive"
-                      });
-                    }
-                  }
-                }}
-              >
-                Regenerate QR Code
-              </Button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowQRCodeDialog(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <QRCodeDialog
+        open={showQRCodeDialog}
+        onOpenChange={setShowQRCodeDialog}
+        premise={selectedPremise}
+        premises={premises}
+        setPremises={setPremises}
+      />
     </div>
   );
 };

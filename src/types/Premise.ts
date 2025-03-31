@@ -14,4 +14,8 @@ export interface Premise {
   current_visitors?: number;
   created_at?: string;
   updated_at?: string;
+  capacity?: number;
+  contact_person?: string;
+  contact_email?: string;
+  contact_phone?: string;
 }
