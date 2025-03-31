@@ -90,6 +90,10 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center py-6">
+          {/* 
+            The qr_code_url is expected to be a fully qualified absolute URL from the backend.
+            The PremiseSerializer.get_qr_code_url method handles this conversion.
+          */}
           {premise.qr_code_url ? (
             <div className="bg-white p-6 rounded-md mb-4 border">
               <img 
