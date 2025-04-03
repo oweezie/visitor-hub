@@ -9,6 +9,8 @@ import { Download, Printer, QrCode, Share2, RefreshCw } from "lucide-react";
 import { premisesApi } from "@/services/api/premises";
 import { Premise } from "@/types/Premise";
 
+const frontendBaseUrl = import.meta.env.VITE_FRONTEND_BASE_URL || window.location.origin;
+
 const QRCodePage = () => {
   const [premises, setPremises] = useState<Premise[]>([]);
   const [selectedPremise, setSelectedPremise] = useState<string>("");
@@ -118,10 +120,13 @@ const QRCodePage = () => {
   const handlePrintQrCode = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const premiseName = premises.find(p => p.id === selectedPremise)?.name || "";
+      const visitorSigninUrl = `${frontendBaseUrl}/visitor/signin?premise_id=${selectedPremise}&premiseName=${encodeURIComponent(premiseName)}`;
+      
       printWindow.document.write(`
         <html>
           <head>
-            <title>Visitor Sign-In QR Code - ${premises.find(p => p.id === selectedPremise)?.name}</title>
+            <title>Visitor Sign-In QR Code - ${premiseName}</title>
             <style>
               body { font-family: Arial, sans-serif; text-align: center; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -133,9 +138,10 @@ const QRCodePage = () => {
           <body>
             <div class="container">
               <h1>Scan to Sign-In as a Visitor</h1>
-              <p>${premises.find(p => p.id === selectedPremise)?.name}</p>
+              <p>${premiseName}</p>
               <img src="${qrCodeUrl}" alt="Visitor Sign-In QR Code" />
               <p>Point your camera at this QR code to sign in as a visitor</p>
+              <p class="text-sm">URL: ${visitorSigninUrl}</p>
             </div>
           </body>
         </html>
@@ -186,22 +192,22 @@ const QRCodePage = () => {
     if (!qrCodeUrl) return;
     
     try {
+      const visitorSigninUrl = `${frontendBaseUrl}/visitor/signin?premise_id=${selectedPremise}&premiseName=${encodeURIComponent(
+        premises.find(p => p.id === selectedPremise)?.name || ""
+      )}`;
+      
       // Check if Web Share API is available
       if (navigator.share) {
         await navigator.share({
           title: `Visitor Sign-In QR Code - ${premises.find(p => p.id === selectedPremise)?.name}`,
           text: "Scan this QR code to sign in as a visitor",
-          url: window.location.origin + `/visitor/signin?premise_id=${selectedPremise}&premiseName=${encodeURIComponent(
-            premises.find(p => p.id === selectedPremise)?.name || ""
-          )}`
+          url: visitorSigninUrl
         });
       } else {
         // Fallback if Web Share API is not available
         const tempInput = document.createElement("input");
         document.body.appendChild(tempInput);
-        tempInput.value = window.location.origin + `/visitor/signin?premise_id=${selectedPremise}&premiseName=${encodeURIComponent(
-          premises.find(p => p.id === selectedPremise)?.name || ""
-        )}`;
+        tempInput.value = visitorSigninUrl;
         tempInput.select();
         document.execCommand("copy");
         document.body.removeChild(tempInput);

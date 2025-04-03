@@ -2,9 +2,12 @@
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 
+// Get the API base URL from environment variables or use a default
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/v1",
+  baseURL: apiBaseUrl,
   headers: {
     "Content-Type": "application/json",
   },
@@ -42,7 +45,7 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
         
-        const response = await axios.post("/api/v1/auth/refresh/", {
+        const response = await axios.post(`${apiBaseUrl}/auth/refresh/`, {
           refresh_token: refreshToken
         });
         
