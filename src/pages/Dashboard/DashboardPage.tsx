@@ -70,7 +70,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6 py-2"> {/* Reduced vertical padding */}
+    <div className="space-y-4 py-0"> {/* Reduced vertical spacing */}
       {/* Dashboard Header */}
       <DashboardHeader 
         username={user?.username} 

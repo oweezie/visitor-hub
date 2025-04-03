@@ -151,7 +151,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       
       {/* Content */}
       <div className="lg:pl-64">
-        <main className="p-4 md:p-6 max-w-7xl mx-auto">
+        <main className="p-3 md:p-4 max-w-7xl mx-auto"> {/* Reduced padding on all screens */}
           {children}
         </main>
       </div>
