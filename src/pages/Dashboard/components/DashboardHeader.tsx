@@ -13,12 +13,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ username, onRefresh }
   const navigate = useNavigate();
   
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2"> {/* Added margin-bottom instead of relying on parent spacing */}
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 pt-0 mt-0"> {/* Removed top padding, added 0 margin-top */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground">Welcome back, {username}! Here's what's happening today.</p>
       </div>
-      <div className="flex space-x-2 mt-3 md:mt-0"> {/* Reduced top margin on mobile */}
+      <div className="flex space-x-2 mt-2 md:mt-0"> {/* Reduced mobile top margin further */}
         <Button 
           variant="outline" 
           onClick={onRefresh}

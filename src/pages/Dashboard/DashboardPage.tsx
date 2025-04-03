@@ -30,13 +30,15 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const dashboardData = await api.get<DashboardStats>("/stats/dashboard/");
+      const response = await api.get<DashboardStats>("/stats/dashboard/");
+      const dashboardData = response.data;
       
       // Check if we need to fetch activity data separately
       if (!dashboardData.recentActivity || dashboardData.recentActivity.length === 0) {
         try {
           // Get activity data in a separate call
-          const activityData = await api.get<RecentActivity[]>("/stats/recent-activity/");
+          const activityResponse = await api.get<RecentActivity[]>("/stats/recent-activity/");
+          const activityData = activityResponse.data;
           
           // Create a new object with all properties from dashboardData plus the activity data
           setStats({
@@ -70,7 +72,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-4 py-0"> {/* Reduced vertical spacing */}
+    <div className="space-y-4 mt-0"> {/* Removed vertical padding completely, use margin-top instead */}
       {/* Dashboard Header */}
       <DashboardHeader 
         username={user?.username} 
