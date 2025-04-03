@@ -30,11 +30,10 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      // Our axios interceptor automatically returns the data property from the response
       const dashboardData = await api.get<DashboardStats>("/stats/dashboard/");
       
       // Check if we need to fetch activity data separately
-      if (!dashboardData?.recentActivity || dashboardData.recentActivity.length === 0) {
+      if (!dashboardData.recentActivity || dashboardData.recentActivity.length === 0) {
         try {
           // Get activity data in a separate call
           const activityData = await api.get<RecentActivity[]>("/stats/recent-activity/");
@@ -71,7 +70,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 py-2"> {/* Reduced vertical padding */}
       {/* Dashboard Header */}
       <DashboardHeader 
         username={user?.username} 
