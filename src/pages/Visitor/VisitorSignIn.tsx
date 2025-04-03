@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { visitorsApi } from "@/services/api/visitors";
+import { visitorsApi, VisitorSignInData } from "@/services/api/visitors";
 import { Camera, FileCheck, Upload, X, User, Phone, MapPin, Clock, CheckCircle, Calendar, Building } from "lucide-react";
 
 // Define the form schema with validation
@@ -110,11 +110,25 @@ const VisitorSignIn = () => {
     try {
       setIsSubmitting(true);
       
-      const visitorData = {
-        ...data,
+      // Create a visitor data object that conforms to VisitorSignInData
+      const visitorData: VisitorSignInData = {
+        first_name: data.first_name,
+        second_name: data.second_name,
+        phone_number: data.phone_number,
+        person_visiting: data.person_visiting,
+        room_number: data.room_number || "",
+        reason: data.reason,
         premise: parseInt(premiseId),
-        id_photo: idPhoto || undefined
       };
+      
+      // Only add id_photo if it exists
+      if (idPhoto) {
+        visitorData.id_photo = idPhoto;
+      }
+      
+      // Add optional fields if they exist
+      if (data.company) visitorData.company = data.company;
+      if (data.email) visitorData.email = data.email;
       
       await visitorsApi.visitorSignIn(visitorData);
       
