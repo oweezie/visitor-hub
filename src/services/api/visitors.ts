@@ -20,7 +20,7 @@ export interface Visitor {
   email?: string;
 }
 
-interface VisitorSignInData {
+export interface VisitorSignInData {
   premise: number;
   first_name: string;
   second_name: string;
@@ -46,17 +46,29 @@ interface RejectVisitorData {
   rejected_at?: string;
 }
 
+export interface VisitorSignInResponse {
+  message?: string;
+  visitor?: Visitor;
+}
+
+export type VisitorSignInResponseType = VisitorSignInResponse | Visitor;
+
 export const visitorsApi = {
   getAllVisitors: (params?: { status?: string; premise_id?: number }): Promise<Visitor[]> => {
     return api.get('/visitors/', { params });
   },
   
-  visitorSignIn: (data: VisitorSignInData): Promise<Visitor> => {
+  visitorSignIn: (data: VisitorSignInData): Promise<VisitorSignInResponseType> => {
     const formData = new FormData();
     
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        formData.append(key, value);
+        // Ensure premise is sent as a number
+        if (key === 'premise' && typeof value === 'number') {
+          formData.append(key, value.toString());
+        } else {
+          formData.append(key, value);
+        }
       }
     });
     

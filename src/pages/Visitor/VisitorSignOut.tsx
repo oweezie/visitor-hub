@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/axios";
+import { visitorsApi } from "@/services/api/visitors";
 import { FileCheck, LogOut, MapPin, Clock, Info, AlertCircle } from "lucide-react";
 
 interface VisitorInfo {
@@ -17,7 +18,7 @@ interface VisitorInfo {
 
 const VisitorSignOut = () => {
   const [searchParams] = useSearchParams();
-  const premiseId = searchParams.get("premiseId");
+  const premiseId = searchParams.get("premise_id");
   const premiseName = searchParams.get("premiseName") || "Unknown Premise";
   
   const [visitorInfo, setVisitorInfo] = useState<VisitorInfo | null>(null);
@@ -37,6 +38,10 @@ const VisitorSignOut = () => {
       }
       
       try {
+        // This component serves as a fallback for manual sign-out
+        // Automatic sign-out is now handled in the sign-in flow when the same QR code is scanned
+        // by a visitor whose IP is already signed in
+        
         // In a real implementation, this would call an API that identifies the visitor
         // based on IP address, device, or other criteria handled by the backend
         // const response = await api.get(`/visitors/identify?premise_id=${premiseId}`);
@@ -69,10 +74,11 @@ const VisitorSignOut = () => {
     try {
       setIsSubmitting(true);
       
-      // In a real implementation, this would call the sign-out API
-      // await api.post(`/visitors/${visitorInfo.id}/signout/`);
+      // Call the sign-out API
+      await visitorsApi.visitorSignOut({
+        premise: parseInt(premiseId || "0"),
+      });
       
-      // Mock successful sign-out
       setTimeout(() => {
         setIsSuccess(true);
         toast({

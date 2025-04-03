@@ -191,7 +191,7 @@ const QRCodePage = () => {
         await navigator.share({
           title: `Visitor Sign-In QR Code - ${premises.find(p => p.id === selectedPremise)?.name}`,
           text: "Scan this QR code to sign in as a visitor",
-          url: window.location.origin + `/visitor/signin?premiseId=${selectedPremise}&premiseName=${encodeURIComponent(
+          url: window.location.origin + `/visitor/signin?premise_id=${selectedPremise}&premiseName=${encodeURIComponent(
             premises.find(p => p.id === selectedPremise)?.name || ""
           )}`
         });
@@ -199,7 +199,7 @@ const QRCodePage = () => {
         // Fallback if Web Share API is not available
         const tempInput = document.createElement("input");
         document.body.appendChild(tempInput);
-        tempInput.value = window.location.origin + `/visitor/signin?premiseId=${selectedPremise}&premiseName=${encodeURIComponent(
+        tempInput.value = window.location.origin + `/visitor/signin?premise_id=${selectedPremise}&premiseName=${encodeURIComponent(
           premises.find(p => p.id === selectedPremise)?.name || ""
         )}`;
         tempInput.select();

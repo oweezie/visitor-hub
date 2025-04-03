@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { visitorsApi, VisitorSignInData } from "@/services/api/visitors";
+import { visitorsApi, VisitorSignInData, VisitorSignInResponseType } from "@/services/api/visitors";
 import { Camera, FileCheck, Upload, X, User, Phone, MapPin, Clock, CheckCircle, Calendar, Building } from "lucide-react";
 
 // Define the form schema with validation
@@ -31,7 +31,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const VisitorSignIn = () => {
   const [searchParams] = useSearchParams();
-  const premiseId = searchParams.get("premiseId");
+  const premiseId = searchParams.get("premise_id");
   const premiseName = searchParams.get("premiseName") || "Unknown Premise";
   
   const [step, setStep] = useState(1);
@@ -42,6 +42,8 @@ const VisitorSignIn = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isReturningVisitor, setIsReturningVisitor] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleString());
   
   const { toast } = useToast();
@@ -130,13 +132,25 @@ const VisitorSignIn = () => {
       if (data.company) visitorData.company = data.company;
       if (data.email) visitorData.email = data.email;
       
-      await visitorsApi.visitorSignIn(visitorData);
+      const response = await visitorsApi.visitorSignIn(visitorData);
+      
+      // Check if this is a returning visitor (welcome back message)
+      if ("message" in response && response.message && response.message.includes("Welcome back")) {
+        setIsReturningVisitor(true);
+        setWelcomeMessage(response.message);
+        toast({
+          title: "Welcome back!",
+          description: "You have been automatically signed in",
+        });
+      } else {
+        setIsReturningVisitor(false);
+        toast({
+          title: "Sign-in successful",
+          description: "You have been registered as a visitor",
+        });
+      }
       
       setIsSuccess(true);
-      toast({
-        title: "Sign-in successful",
-        description: "You have been registered as a visitor",
-      });
       
       // Reset form after successful submission
       setTimeout(() => {
@@ -169,9 +183,13 @@ const VisitorSignIn = () => {
             <div className="mx-auto bg-green-100 p-3 rounded-full w-20 h-20 flex items-center justify-center mb-4">
               <CheckCircle className="h-10 w-10 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold">Sign-In Successful!</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {isReturningVisitor ? "Welcome Back!" : "Sign-In Successful!"}
+            </CardTitle>
             <CardDescription className="text-base">
-              Thank you for registering your visit.
+              {isReturningVisitor 
+                ? welcomeMessage || `Welcome back, ${form.getValues("first_name")}!`
+                : "Thank you for registering your visit."}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-6 pt-4">
@@ -196,7 +214,9 @@ const VisitorSignIn = () => {
             </div>
             <div className="bg-blue-50 p-4 rounded-lg text-center">
               <p className="font-medium text-blue-800">
-                Please wait for your visit to be approved by the host.
+                {isReturningVisitor 
+                  ? "You have been automatically signed in."
+                  : "Please wait for your visit to be approved by the host."}
               </p>
             </div>
           </CardContent>
