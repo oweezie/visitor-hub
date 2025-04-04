@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,77 +31,29 @@ const DashboardPage = () => {
     setLoading(true);
     try {
       const response = await api.get<DashboardStats>("/stats/dashboard/");
-      console.log("Dashboard stats response:", response);
+      const dashboardData = response.data;
       
-      // If the response itself is undefined or null, create a default empty stats object
-      if (!response) {
-        console.warn("Dashboard stats response is undefined");
-        setStats({
-          totalVisitors: 0,
-          activeVisitors: 0,
-          averageDuration: "0h 0m",
-          recentSignIns: 0,
-          recentSignOuts: 0,
-          signInsByPremise: [],
-          visitorHistory: [],
-          visitorStatuses: [],
-          recentActivity: []
-        });
-        return;
-      }
-      
-      // Safely handle the dashboard data whether it has recentActivity or not
-      const dashboardData = response.data || response; // Handle both possible response formats
-      
-      // Create a data object with defaults for all properties
-      const normalizedData = {
-        totalVisitors: dashboardData.totalVisitors || 0,
-        activeVisitors: dashboardData.activeVisitors || 0,
-        averageDuration: dashboardData.averageDuration || "0h 0m",
-        recentSignIns: dashboardData.recentSignIns || 0,
-        recentSignOuts: dashboardData.recentSignOuts || 0,
-        signInsByPremise: dashboardData.signInsByPremise || [],
-        visitorHistory: dashboardData.visitorHistory || [],
-        visitorStatuses: dashboardData.visitorStatuses || [],
-        recentActivity: dashboardData.recentActivity || []
-      };
-      
-      // Set the normalized data to state
-      setStats(normalizedData);
-      
-      // Only if we need to fetch activity data separately and the endpoint exists
-      if (normalizedData.recentActivity.length === 0) {
+      // Check if we need to fetch activity data separately
+      if (!dashboardData.recentActivity || dashboardData.recentActivity.length === 0) {
         try {
           // Get activity data in a separate call
           const activityResponse = await api.get<RecentActivity[]>("/stats/recent-activity/");
-          if (activityResponse && Array.isArray(activityResponse.data || activityResponse)) {
-            const activityData = activityResponse.data || activityResponse;
-            
-            // Update state with the activity data
-            setStats(prevStats => ({
-              ...prevStats,
-              recentActivity: activityData
-            }));
-          }
+          const activityData = activityResponse.data;
+          
+          // Create a new object with all properties from dashboardData plus the activity data
+          setStats({
+            ...dashboardData,
+            recentActivity: activityData
+          });
         } catch (activityError) {
           console.error("Error fetching recent activity:", activityError);
-          // Keep the empty array for recentActivity
+          setStats(dashboardData);
         }
+      } else {
+        setStats(dashboardData);
       }
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
-      // Set default values in case of error
-      setStats({
-        totalVisitors: 0,
-        activeVisitors: 0,
-        averageDuration: "0h 0m",
-        recentSignIns: 0,
-        recentSignOuts: 0,
-        signInsByPremise: [],
-        visitorHistory: [],
-        visitorStatuses: [],
-        recentActivity: []
-      });
     } finally {
       setLoading(false);
     }

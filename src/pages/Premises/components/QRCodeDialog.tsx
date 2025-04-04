@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { QrCode } from "lucide-react";
@@ -23,13 +23,11 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   setPremises,
 }) => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   
   if (!premise) return null;
   
   const handleDownloadQrCode = async () => {
     try {
-      setIsLoading(true);
       const response = await premisesApi.downloadPremiseQrCode(premise.id);
       const blob = response;
       const url = window.URL.createObjectURL(blob);
@@ -40,31 +38,22 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: 'Success',
-        description: 'QR code downloaded successfully'
-      });
     } catch (error) {
       console.error('Error downloading QR code:', error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.error('Authentication error: User may not be authorized to download QR code');
+      }
       toast({
         title: 'Error',
-        description: 'Failed to download QR code. Please try again.',
+        description: 'Failed to download QR code',
         variant: 'destructive'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
   
   const handleRegenerateQrCode = async () => {
     try {
-      setIsLoading(true);
       const qrCodeData = await premisesApi.getPremiseQrCode(premise.id);
-      
-      if (!qrCodeData || !qrCodeData.qr_code_url) {
-        throw new Error("QR code URL not found in response");
-      }
       
       const updatedPremises = premises.map(p => 
         p.id === premise.id 
@@ -80,13 +69,14 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
       });
     } catch (error) {
       console.error("Error regenerating QR code:", error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.error('Authentication error: User may not be authorized to regenerate QR code');
+      }
       toast({
         title: "Error",
-        description: "Failed to regenerate QR code. Please try again.",
+        description: "Failed to regenerate QR code",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
   
@@ -100,30 +90,21 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center py-6">
+          {/* 
+            The qr_code_url is expected to be a fully qualified absolute URL from the backend.
+            The PremiseSerializer.get_qr_code_url method handles this conversion.
+          */}
           {premise.qr_code_url ? (
             <div className="bg-white p-6 rounded-md mb-4 border">
               <img 
                 src={premise.qr_code_url} 
                 alt={`QR Code for ${premise.name}`}
                 className="w-48 h-48 object-contain"
-                onError={(e) => {
-                  console.error("Error loading QR code image:", e);
-                  e.currentTarget.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='%23d1d5db' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='8' y1='8' x2='8' y2='8'%3E%3C/line%3E%3Cline x1='16' y1='8' x2='16' y2='8'%3E%3C/line%3E%3Cline x1='8' y1='16' x2='8' y2='16'%3E%3C/line%3E%3Cline x1='16' y1='16' x2='16' y2='16'%3E%3C/line%3E%3Cline x1='12' y1='12' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E";
-                  toast({
-                    title: "Warning",
-                    description: "QR code image failed to load. Try regenerating it.",
-                    variant: "destructive"
-                  });
-                }}
               />
             </div>
           ) : (
             <div className="bg-gray-100 p-6 rounded-md mb-4 flex items-center justify-center w-48 h-48">
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              ) : (
-                <QrCode className="h-12 w-12 text-gray-400" />
-              )}
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
           )}
           <p className="text-center text-sm text-muted-foreground mb-4">
@@ -133,7 +114,7 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
             <Button 
               variant="outline"
               onClick={handleDownloadQrCode}
-              disabled={!premise.qr_code_url || isLoading}
+              disabled={!premise.qr_code_url}
             >
               <QrCode className="mr-2 h-4 w-4" />
               Download QR Code
@@ -141,13 +122,7 @@ const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
             <Button 
               variant="secondary"
               onClick={handleRegenerateQrCode}
-              disabled={isLoading}
             >
-              {isLoading ? (
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
-              ) : (
-                <QrCode className="mr-2 h-4 w-4" />
-              )}
               Regenerate QR Code
             </Button>
           </div>

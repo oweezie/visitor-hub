@@ -29,10 +29,7 @@ api.interceptors.request.use(
 
 // Add response interceptor to handle errors and token refreshing
 api.interceptors.response.use(
-  (response) => {
-    // Return the response or response.data if it exists
-    return response.data !== undefined ? response.data : response;
-  },
+  (response) => response.data, // Return just the data part of the response
   async (error) => {
     const originalRequest = error.config;
     
