@@ -3,6 +3,8 @@ import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 
 // Get the API base URL from environment variables or use a default
+// This ensures that API calls, including those fetching QR code and dashboard stats,
+// use the expected endpoints configured in the environment
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 // Create axios instance with base URL
@@ -68,6 +70,7 @@ api.interceptors.response.use(
     // For other errors, show toast notification
     const errorMessage = error.response?.data?.message || 
                          error.response?.data?.error || 
+                         error.response?.data?.detail ||
                          "An unexpected error occurred";
     toast({
       title: "Error",

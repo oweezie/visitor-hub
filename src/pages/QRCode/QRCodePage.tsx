@@ -97,14 +97,25 @@ const QRCodePage = () => {
     try {
       setIsQrLoading(true);
       const response = await premisesApi.getPremiseQrCode(selectedPremise);
-      // Append a timestamp query parameter to bypass cache
-      const refreshedUrl = `${response.qr_code_url}${response.qr_code_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
-      setQrCodeUrl(refreshedUrl);
       
-      toast({
-        title: "Success",
-        description: "QR Code has been refreshed successfully",
-      });
+      // Check if the response contains a QR code URL
+      if (response && response.qr_code_url) {
+        // Append a timestamp query parameter to bypass cache
+        const refreshedUrl = `${response.qr_code_url}${response.qr_code_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        setQrCodeUrl(refreshedUrl);
+        
+        toast({
+          title: "Success",
+          description: "QR Code has been refreshed successfully",
+        });
+      } else {
+        console.error("QR code URL not found in response", response);
+        toast({
+          title: "Error",
+          description: "The QR code URL is missing from the server response.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error("Error refreshing QR code:", error);
       toast({

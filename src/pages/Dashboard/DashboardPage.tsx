@@ -33,8 +33,13 @@ const DashboardPage = () => {
       const response = await api.get<DashboardStats>("/stats/dashboard/");
       const dashboardData = response.data;
       
+      // Ensure recentActivity is always an array
+      if (!dashboardData.recentActivity) {
+        dashboardData.recentActivity = [];
+      }
+      
       // Check if we need to fetch activity data separately
-      if (!dashboardData.recentActivity || dashboardData.recentActivity.length === 0) {
+      if (dashboardData.recentActivity.length === 0) {
         try {
           // Get activity data in a separate call
           const activityResponse = await api.get<RecentActivity[]>("/stats/recent-activity/");
@@ -96,7 +101,7 @@ const DashboardPage = () => {
       
       {/* Recent Activity & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <RecentActivityComponent activities={stats.recentActivity || []} />
+        <RecentActivityComponent activities={stats.recentActivity} />
         <QuickActions />
       </div>
     </div>
