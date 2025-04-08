@@ -60,10 +60,17 @@ const QRCodePage = () => {
         
         // Ensure we're using the correct property from the response
         if (response && response.qr_code_url) {
-          // Add cache-busting parameter to force reload of the image
-          const url = `${response.qr_code_url}${response.qr_code_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
-          console.log("Setting QR code URL to:", url);
-          setQrCodeUrl(url);
+          // Prepend backend base URL if the returned URL is relative
+          const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+          let qrUrl = response.qr_code_url;
+          if (qrUrl.startsWith("/")) {
+            qrUrl = `${backendBaseUrl}${qrUrl}`;
+          }
+
+          // Append cache-busting parameter to force image reload
+          const finalUrl = `${qrUrl}${qrUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+          console.log("Setting QR code URL to:", finalUrl);
+          setQrCodeUrl(finalUrl);
         } else {
           console.error("QR code URL not found in response", response);
           toast({
@@ -100,8 +107,15 @@ const QRCodePage = () => {
       
       // Check if the response contains a QR code URL
       if (response && response.qr_code_url) {
+        // Prepend backend base URL if the returned URL is relative
+        const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+        let qrUrl = response.qr_code_url;
+        if (qrUrl.startsWith("/")) {
+          qrUrl = `${backendBaseUrl}${qrUrl}`;
+        }
+        
         // Append a timestamp query parameter to bypass cache
-        const refreshedUrl = `${response.qr_code_url}${response.qr_code_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        const refreshedUrl = `${qrUrl}${qrUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         setQrCodeUrl(refreshedUrl);
         
         toast({

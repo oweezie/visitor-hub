@@ -92,7 +92,7 @@ export const premisesApi = {
   // Get QR code URL for a premise
   getPremiseQrCode: async (id: string | number): Promise<{ qr_code_url: string }> => {
     const response = await api.get(`/auth/premises/${id}/qr_code/`);
-    return response.data;
+    return response;
   },
   
   // Download QR code image as Blob

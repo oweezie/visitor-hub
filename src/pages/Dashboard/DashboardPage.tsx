@@ -30,32 +30,28 @@ const DashboardPage = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const response = await api.get<DashboardStats>("/stats/dashboard/");
-      const dashboardData = response.data;
-      
-      // Ensure recentActivity is always an array
-      if (!dashboardData.recentActivity) {
-        dashboardData.recentActivity = [];
-      }
-      
-      // Check if we need to fetch activity data separately
-      if (dashboardData.recentActivity.length === 0) {
-        try {
-          // Get activity data in a separate call
-          const activityResponse = await api.get<RecentActivity[]>("/stats/recent-activity/");
-          const activityData = activityResponse.data;
-          
-          // Create a new object with all properties from dashboardData plus the activity data
-          setStats({
-            ...dashboardData,
-            recentActivity: activityData
-          });
-        } catch (activityError) {
-          console.error("Error fetching recent activity:", activityError);
-          setStats(dashboardData);
+      const dashboardData = await api.get<DashboardStats>("/stats/dashboard/");
+
+      if (dashboardData && typeof dashboardData === 'object') {
+        // Safely default recentActivity to an empty array if missing
+        const updatedDashboardData = {
+          ...dashboardData,
+          recentActivity: dashboardData.recentActivity || []
+        };
+
+        // If recentActivity is still empty, attempt fetching it separately
+        if (updatedDashboardData.recentActivity.length === 0) {
+          try {
+            const activityData = await api.get(updatedDashboardData.recentActivity ? "/stats/recent-activity/" : "");
+            updatedDashboardData.recentActivity = activityData;
+          } catch (activityError) {
+            console.error("Error fetching recent activity:", activityError);
+          }
         }
+
+        setStats(updatedDashboardData);
       } else {
-        setStats(dashboardData);
+        console.error("Received invalid dashboard stats:", dashboardData);
       }
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
