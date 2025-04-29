@@ -103,5 +103,15 @@ export const premisesApi = {
         'Accept': 'image/png, image/jpeg'
       }
     });
-  }
+  },
+
+  // Get dynamic QR code for a premise
+  getDynamicQrCode: async (id: string | number): Promise<Blob> => {
+    return api.get(`/auth/premises/${id}/dynamic-qr-code/`, {
+      responseType: 'blob',
+      headers: {
+        'Accept': 'image/png',
+      },
+    });
+  },
 };

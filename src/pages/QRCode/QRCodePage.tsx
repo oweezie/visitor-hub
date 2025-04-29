@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,51 +46,33 @@ const QRCodePage = () => {
     fetchPremises();
   }, [toast]);
 
-  // Fetch QR code when premise is selected
+  // Fetch dynamic QR code when premise is selected
   useEffect(() => {
     if (!selectedPremise) return;
 
-    const fetchQrCode = async () => {
+    const fetchDynamicQrCode = async () => {
       try {
         setIsQrLoading(true);
-        console.log("Fetching QR code for premise:", selectedPremise);
-        const response = await premisesApi.getPremiseQrCode(selectedPremise);
-        console.log("QR code response:", response);
-        
-        // Ensure we're using the correct property from the response
-        if (response && response.qr_code_url) {
-          // Prepend backend base URL if the returned URL is relative
-          const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-          let qrUrl = response.qr_code_url;
-          if (qrUrl.startsWith("/")) {
-            qrUrl = `${backendBaseUrl}${qrUrl}`;
-          }
+        console.log("Fetching dynamic QR code for premise:", selectedPremise);
+        const blob = await premisesApi.getDynamicQrCode(selectedPremise);
 
-          // Append cache-busting parameter to force image reload
-          const finalUrl = `${qrUrl}${qrUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-          console.log("Setting QR code URL to:", finalUrl);
-          setQrCodeUrl(finalUrl);
-        } else {
-          console.error("QR code URL not found in response", response);
-          toast({
-            title: "Error",
-            description: "The QR code URL is missing from the server response.",
-            variant: "destructive"
-          });
-        }
+        // Create a URL for the blob
+        const qrUrl = URL.createObjectURL(blob);
+        console.log("Dynamic QR code URL:", qrUrl);
+        setQrCodeUrl(qrUrl);
       } catch (error) {
-        console.error("Error fetching QR code:", error);
+        console.error("Error fetching dynamic QR code:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch QR code. Please try again.",
-          variant: "destructive"
+          description: "Failed to fetch dynamic QR code. Please try again.",
+          variant: "destructive",
         });
       } finally {
         setIsQrLoading(false);
       }
     };
 
-    fetchQrCode();
+    fetchDynamicQrCode();
   }, [selectedPremise, toast]);
 
   const handlePremiseChange = (value: string) => {
