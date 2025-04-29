@@ -95,14 +95,20 @@ export const premisesApi = {
     return response;
   },
   
-  // Download QR code image as Blob
-  downloadPremiseQrCode: (id: string | number): Promise<Blob> => {
-    return api.get(`/auth/premises/${id}/download_qr_code/`, { 
+  // Download QR code image as Blob - Modified to handle content type correctly
+  downloadPremiseQrCode: async (id: string | number): Promise<Blob> => {
+    // Use axios directly instead of the intercepted api instance to get the full response
+    const response = await api.get(`/auth/premises/${id}/download_qr_code/`, {
       responseType: 'blob',
+      // Don't specify the Accept header to let the server determine the content type
+      transformResponse: [(data) => data], // Prevent default JSON transformation
       headers: {
-        'Accept': 'image/png, image/jpeg'
+        // The 406 error suggests the server doesn't accept the specific media types
+        // So we're using a more generic Accept header
+        'Accept': '*/*'
       }
     });
+    return response;
   },
 
   // Get dynamic QR code for a premise
@@ -110,7 +116,7 @@ export const premisesApi = {
     return api.get(`/auth/premises/${id}/dynamic-qr-code/`, {
       responseType: 'blob',
       headers: {
-        'Accept': 'image/png',
+        'Accept': '*/*', // Accept any content type
       },
     });
   },
